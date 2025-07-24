@@ -185,14 +185,28 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-gradient-to-r from-physics-blue/10 to-physics-purple/10">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-physics-blue to-physics-purple bg-clip-text text-transparent">
-            Physics Agent Orchestrator
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            AI-powered spring dynamics simulation with Hooke's law implementation
-          </p>
+      <div className="border-b border-border bg-gradient-to-r from-physics-blue/10 to-physics-purple/10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-physics-blue/5 via-transparent to-physics-purple/5 animate-pulse-glow"></div>
+        <div className="container mx-auto px-4 py-8 relative">
+          <div className="animate-slide-in-spring">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-physics-blue to-physics-purple bg-clip-text text-transparent animate-physics-float">
+              ⚛️ Physics Agent Orchestrator
+            </h1>
+            <p className="text-muted-foreground mt-3 text-lg animate-slide-in-spring delay-150">
+              AI-powered spring dynamics simulation with Hooke's law implementation
+            </p>
+            <div className="flex gap-3 mt-4 animate-slide-in-spring delay-300">
+              <div className="px-3 py-1 bg-physics-green/20 text-physics-green rounded-full text-sm font-medium animate-oscillate">
+                F = -kx
+              </div>
+              <div className="px-3 py-1 bg-physics-blue/20 text-physics-blue rounded-full text-sm font-medium animate-oscillate delay-150">
+                Series/Parallel
+              </div>
+              <div className="px-3 py-1 bg-physics-purple/20 text-physics-purple rounded-full text-sm font-medium animate-oscillate delay-300">
+                Real Physics
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -200,45 +214,83 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Section */}
           <div className="space-y-6">
-            <Card className="p-6 border-physics-blue/20">
-              <h2 className="text-2xl font-semibold mb-4 text-physics-blue">
+            <Card className={`p-6 border-physics-blue/20 transition-all duration-300 hover:border-physics-blue/40 hover:shadow-lg hover:shadow-physics-blue/10 ${isProcessing ? 'animate-pulse-glow' : ''}`}>
+              <h2 className="text-2xl font-semibold mb-4 text-physics-blue flex items-center gap-2">
+                <span className="animate-spring-bounce">🎯</span>
                 Physics Prompt
               </h2>
               <Textarea
                 placeholder="Describe your spring physics simulation... e.g., 'Create a double pendulum with springs', 'Show parallel spring system with different constants', 'Demonstrate Hooke's law with damping'"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-[120px] bg-secondary/50 border-physics-blue/30"
+                className="min-h-[120px] bg-secondary/50 border-physics-blue/30 transition-all duration-200 focus:border-physics-blue/60 focus:ring-2 focus:ring-physics-blue/20"
                 disabled={isProcessing}
               />
               <Button
                 onClick={handleSubmit}
                 disabled={isProcessing || !prompt.trim()}
-                className="w-full mt-4 bg-gradient-to-r from-physics-blue to-physics-purple hover:from-physics-blue/80 hover:to-physics-purple/80"
+                className={`w-full mt-4 bg-gradient-to-r from-physics-blue to-physics-purple hover:from-physics-blue/80 hover:to-physics-purple/80 transition-all duration-300 ${isProcessing ? 'animate-pulse' : 'hover:animate-spring-bounce'}`}
               >
-                {isProcessing ? "Processing..." : "Generate Physics Simulation"}
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Processing Physics...
+                  </div>
+                ) : (
+                  "Generate Physics Simulation"
+                )}
               </Button>
             </Card>
 
-            <AgentPanel currentPhase={currentPhase} isProcessing={isProcessing} />
+            <div className="animate-slide-in-spring delay-200">
+              <AgentPanel currentPhase={currentPhase} isProcessing={isProcessing} />
+            </div>
             
-            <SpringSimulation 
-              config={springConfig}
-              onConfigChange={setSpringConfig}
-            />
+            <div className="animate-slide-in-spring delay-400">
+              <SpringSimulation 
+                config={springConfig}
+                onConfigChange={setSpringConfig}
+              />
+            </div>
           </div>
 
           {/* Output Section */}
           <div className="space-y-6">
-            <PhysicsOrchestrator 
-              isActive={isProcessing}
-              currentPhase={currentPhase}
-            />
+            <div className="animate-slide-in-spring delay-300">
+              <PhysicsOrchestrator 
+                isActive={isProcessing}
+                currentPhase={currentPhase}
+              />
+            </div>
             
-            <CodeGenerator 
-              code={generatedCode}
-              isProcessing={isProcessing}
-            />
+            <div className="animate-slide-in-spring delay-500">
+              <CodeGenerator 
+                code={generatedCode}
+                isProcessing={isProcessing}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Physics Info Footer */}
+        <div className="mt-12 p-6 bg-gradient-to-r from-physics-green/10 to-physics-blue/10 rounded-xl border border-physics-green/20 animate-slide-in-spring delay-700">
+          <h3 className="text-xl font-semibold mb-4 text-physics-green flex items-center gap-2">
+            <span className="animate-oscillate">🧮</span>
+            Physics Fundamentals
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div className="p-4 bg-physics-blue/10 rounded-lg border border-physics-blue/20 hover:animate-spring-bounce cursor-pointer">
+              <h4 className="font-semibold text-physics-blue mb-2">Hooke's Law</h4>
+              <p className="text-muted-foreground">F = -kx - The restoring force is proportional to displacement</p>
+            </div>
+            <div className="p-4 bg-physics-purple/10 rounded-lg border border-physics-purple/20 hover:animate-spring-bounce cursor-pointer">
+              <h4 className="font-semibold text-physics-purple mb-2">Series Springs</h4>
+              <p className="text-muted-foreground">1/k_total = 1/k₁ + 1/k₂ - Springs in series are softer</p>
+            </div>
+            <div className="p-4 bg-physics-orange/10 rounded-lg border border-physics-orange/20 hover:animate-spring-bounce cursor-pointer">
+              <h4 className="font-semibold text-physics-orange mb-2">Parallel Springs</h4>
+              <p className="text-muted-foreground">k_total = k₁ + k₂ - Parallel springs are stiffer</p>
+            </div>
           </div>
         </div>
       </div>

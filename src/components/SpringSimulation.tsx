@@ -28,13 +28,15 @@ export const SpringSimulation = ({ config, onConfigChange }: SpringSimulationPro
 
     let animationId: number;
     let t = 0;
+    let position = 0;
+    let velocity = 0;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Background grid
       ctx.strokeStyle = '#333';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 0.5;
       for (let i = 0; i < canvas.width; i += 20) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
@@ -48,70 +50,194 @@ export const SpringSimulation = ({ config, onConfigChange }: SpringSimulationPro
         ctx.stroke();
       }
 
-      // Spring visualization
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       
-      // Calculate spring displacement using Hooke's law
-      const amplitude = 50;
-      const frequency = config.k / 50;
-      const displacement = amplitude * Math.sin(t * frequency) * Math.exp(-config.damping * t);
+      // Physics calculations - proper spring-mass system
+      const dt = 0.016; // 60fps
+      const omega = Math.sqrt(config.k / config.mass); // natural frequency
+      const dampingRatio = config.damping / (2 * Math.sqrt(config.k * config.mass));
       
-      // Draw spring
-      ctx.strokeStyle = '#00ff88';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
+      // Calculate new position using proper spring physics
+      const force = -config.k * position - config.damping * velocity;
+      const acceleration = force / config.mass;
+      velocity += acceleration * dt;
+      position += velocity * dt;
       
-      const springLength = 100;
-      const coils = 8;
-      for (let i = 0; i <= coils * 20; i++) {
-        const x = centerX - springLength/2 + (i / (coils * 20)) * springLength;
-        const y = centerY + 15 * Math.sin(i * 0.5) + displacement;
-        
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      // Add small initial displacement if at rest
+      if (Math.abs(position) < 0.1 && Math.abs(velocity) < 0.1 && t === 0) {
+        position = 30;
       }
+
+      if (config.connections === "series") {
+        drawSeriesSprings(ctx, centerX, centerY, position);
+      } else if (config.connections === "parallel") {
+        drawParallelSprings(ctx, centerX, centerY, position);
+      } else {
+        drawNetworkSprings(ctx, centerX, centerY, position);
+      }
+
+      // Draw force vector
+      drawForceVector(ctx, centerX + position, centerY, force);
+
+      // Labels with proper physics values
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '11px monospace';
+      ctx.fillText(`F = -kx = ${force.toFixed(1)} N`, 10, 20);
+      ctx.fillText(`k = ${config.k} N/m`, 10, 35);
+      ctx.fillText(`ζ = ${dampingRatio.toFixed(3)} (damping ratio)`, 10, 50);
+      ctx.fillText(`m = ${config.mass} kg`, 10, 65);
+      ctx.fillText(`ω = ${omega.toFixed(2)} rad/s (natural freq)`, 10, 80);
+      ctx.fillText(`x = ${position.toFixed(1)} cm`, 10, 95);
+
+      t += dt;
+      animationId = requestAnimationFrame(animate);
+    };
+
+    const drawSeriesSprings = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, displacement: number) => {
+      // Fixed wall
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(50, centerY - 20);
+      ctx.lineTo(50, centerY + 20);
       ctx.stroke();
 
-      // Draw masses
+      // First spring
+      drawSpring(ctx, 50, centerX - 50 + displacement/2, centerY, '#00ff88');
+      
+      // Middle mass
       ctx.fillStyle = '#4488ff';
       ctx.beginPath();
-      ctx.arc(centerX - springLength/2, centerY + displacement, 8, 0, Math.PI * 2);
+      ctx.arc(centerX - 50 + displacement/2, centerY, 6, 0, Math.PI * 2);
       ctx.fill();
       
+      // Second spring
+      drawSpring(ctx, centerX - 50 + displacement/2, centerX + displacement, centerY, '#00ff88');
+      
+      // End mass (the one we're tracking)
+      ctx.fillStyle = '#ff6600';
       ctx.beginPath();
-      ctx.arc(centerX + springLength/2, centerY + displacement, 8, 0, Math.PI * 2);
+      ctx.arc(centerX + displacement, centerY, 10, 0, Math.PI * 2);
       ctx.fill();
-
-      // Draw force vectors
-      ctx.strokeStyle = '#ff4444';
+      ctx.strokeStyle = '#ff6600';
       ctx.lineWidth = 2;
-      const forceScale = displacement * 0.5;
-      
-      // Force on left mass
+      ctx.stroke();
+    };
+
+    const drawParallelSprings = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, displacement: number) => {
+      // Fixed wall
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(centerX - springLength/2, centerY + displacement);
-      ctx.lineTo(centerX - springLength/2 + forceScale, centerY + displacement);
+      ctx.moveTo(50, centerY - 30);
+      ctx.lineTo(50, centerY + 30);
+      ctx.stroke();
+
+      // Top spring
+      drawSpring(ctx, 50, centerX + displacement, centerY - 15, '#00ff88');
+      
+      // Bottom spring  
+      drawSpring(ctx, 50, centerX + displacement, centerY + 15, '#00aa55');
+      
+      // Mass connected to both springs
+      ctx.fillStyle = '#ff6600';
+      ctx.beginPath();
+      ctx.arc(centerX + displacement, centerY, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ff6600';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Connection lines
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(centerX + displacement, centerY - 15);
+      ctx.lineTo(centerX + displacement, centerY - 12);
+      ctx.moveTo(centerX + displacement, centerY + 15);
+      ctx.lineTo(centerX + displacement, centerY + 12);
+      ctx.stroke();
+    };
+
+    const drawNetworkSprings = (ctx: CanvasRenderingContext2D, centerX: number, centerY: number, displacement: number) => {
+      // Multiple connected springs in a network
+      const positions = [
+        { x: centerX + displacement * 0.8, y: centerY },
+        { x: centerX + displacement * 0.4, y: centerY - 20 },
+        { x: centerX + displacement * 0.4, y: centerY + 20 }
+      ];
+      
+      // Draw connections
+      positions.forEach((pos, i) => {
+        if (i === 0) {
+          drawSpring(ctx, 50, pos.x, pos.y, '#00ff88');
+        } else {
+          drawSpring(ctx, positions[0].x, pos.x, pos.y, '#00aa88');
+        }
+      });
+      
+      // Draw masses
+      positions.forEach((pos, i) => {
+        ctx.fillStyle = i === 0 ? '#ff6600' : '#4488ff';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, i === 0 ? 10 : 6, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+
+    const drawSpring = (ctx: CanvasRenderingContext2D, x1: number, x2: number, y: number, color: string) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      const length = Math.abs(x2 - x1);
+      const coils = Math.max(6, Math.floor(length / 15));
+      const coilWidth = 12;
+      
+      for (let i = 0; i <= coils * 4; i++) {
+        const progress = i / (coils * 4);
+        const x = x1 + progress * (x2 - x1);
+        const yOffset = coilWidth * Math.sin(i * Math.PI / 2);
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else if (i === coils * 4) {
+          ctx.lineTo(x, y);
+        } else {
+          ctx.lineTo(x, y + yOffset);
+        }
+      }
+      ctx.stroke();
+    };
+
+    const drawForceVector = (ctx: CanvasRenderingContext2D, x: number, y: number, force: number) => {
+      if (Math.abs(force) < 1) return;
+      
+      ctx.strokeStyle = '#ff4444';
+      ctx.fillStyle = '#ff4444';
+      ctx.lineWidth = 2;
+      
+      const scale = 0.5;
+      const arrowLength = force * scale;
+      
+      // Arrow body
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + arrowLength, y);
       ctx.stroke();
       
       // Arrow head
-      ctx.beginPath();
-      ctx.moveTo(centerX - springLength/2 + forceScale, centerY + displacement);
-      ctx.lineTo(centerX - springLength/2 + forceScale - 5, centerY + displacement - 3);
-      ctx.lineTo(centerX - springLength/2 + forceScale - 5, centerY + displacement + 3);
-      ctx.closePath();
-      ctx.fill();
-
-      // Labels
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '12px monospace';
-      ctx.fillText(`F = -kx = -${config.k} × ${displacement.toFixed(2)}`, 10, 20);
-      ctx.fillText(`k = ${config.k} N/m`, 10, 40);
-      ctx.fillText(`damping = ${config.damping}`, 10, 60);
-      ctx.fillText(`mass = ${config.mass} kg`, 10, 80);
-
-      t += 0.02;
-      animationId = requestAnimationFrame(animate);
+      if (Math.abs(arrowLength) > 5) {
+        const headSize = 4;
+        const direction = arrowLength > 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(x + arrowLength, y);
+        ctx.lineTo(x + arrowLength - headSize * direction, y - headSize);
+        ctx.lineTo(x + arrowLength - headSize * direction, y + headSize);
+        ctx.closePath();
+        ctx.fill();
+      }
     };
 
     animate();

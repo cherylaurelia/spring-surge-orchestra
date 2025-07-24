@@ -91,11 +91,56 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				// Spring-themed animations
+				'spring-bounce': {
+					'0%': { transform: 'scale(1) translateX(0)' },
+					'25%': { transform: 'scale(1.05) translateX(-2px)' },
+					'50%': { transform: 'scale(1.1) translateX(0)' },
+					'75%': { transform: 'scale(1.05) translateX(2px)' },
+					'100%': { transform: 'scale(1) translateX(0)' }
+				},
+				'oscillate': {
+					'0%, 100%': { transform: 'translateX(0)' },
+					'50%': { transform: 'translateX(4px)' }
+				},
+				'pulse-glow': {
+					'0%, 100%': { 
+						boxShadow: '0 0 0 0 hsl(var(--physics-blue) / 0.4)',
+						transform: 'scale(1)'
+					},
+					'50%': { 
+						boxShadow: '0 0 0 8px hsl(var(--physics-blue) / 0)',
+						transform: 'scale(1.02)'
+					}
+				},
+				'slide-in-spring': {
+					'0%': { 
+						transform: 'translateX(-100%) scale(0.8)',
+						opacity: '0'
+					},
+					'60%': { 
+						transform: 'translateX(10%) scale(1.05)',
+						opacity: '0.8'
+					},
+					'100%': { 
+						transform: 'translateX(0) scale(1)',
+						opacity: '1'
+					}
+				},
+				'physics-float': {
+					'0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+					'50%': { transform: 'translateY(-6px) rotate(1deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'spring-bounce': 'spring-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'oscillate': 'oscillate 2s ease-in-out infinite',
+				'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'slide-in-spring': 'slide-in-spring 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+				'physics-float': 'physics-float 3s ease-in-out infinite'
 			}
 		}
 	},
