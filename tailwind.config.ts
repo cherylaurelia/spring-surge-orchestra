@@ -52,6 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				physics: {
+					blue: 'hsl(var(--physics-blue))',
+					green: 'hsl(var(--physics-green))',
+					orange: 'hsl(var(--physics-orange))',
+					purple: 'hsl(var(--physics-purple))',
+					red: 'hsl(var(--physics-red))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
